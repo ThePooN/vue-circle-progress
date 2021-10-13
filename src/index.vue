@@ -1,30 +1,20 @@
 <template>
   <div class="circle">
-    <div class="circle-text-body">
-      <span class="legend-text" :class="legendClass"></span>
+    <div class="circle-percent-text-body">
+      <span class="percent-text" :style="{ 'font-size': percentFontSize }"></span>
       <slot></slot>
     </div>
   </div>
 </template>
 
 <script>
-const $ = typeof window !== 'undefined' ?  require('jquery-easing') : null;
+var $ = require('jquery-easing');
 export default {
   props : {
     progress: {
         type: Number,
         required: true,
         default : 0.25
-    },
-    scale: {
-      type: Number,
-      required: false,
-      default: 100
-    },
-    precision: {
-      type: Number,
-      required: false,
-      default: 0
     },
     size: {
         type: Number,
@@ -37,9 +27,12 @@ export default {
     thickness: {
         type: Number,
     },
-    legendClass: {
+    percentFontSize: {
       type: String,
-      required: true
+      required: false,
+      default: function(){
+        return (this.size / 4).toString() + "px";
+      }
     },
     animation: {
         required: false,
@@ -76,7 +69,7 @@ export default {
       type : Boolean,
       default : true
     },
-    showLegend:{
+    removeOnDestroy:{
       type : Boolean,
       default : true
     },
@@ -86,7 +79,7 @@ export default {
     let vm = this;
     $(vm.$el)
     .on('circle-inited', function(event){
-      renderCircleBody(this, (vm.progress/vm.scale));
+      renderCircleBody(this, (vm.progress/100));
       vm.$emit('vue-circle-init', event);
     })
     .circleProgress({
@@ -112,17 +105,14 @@ export default {
 
     function renderCircleBody(self, value){
       value = !!value ? value : vm.progress;
-      if (!vm.showLegend){ return }
-      else if (vm.showLegend && vm.showPercent) {
-        $(self).find('span.legend-text').html(Math.floor(value*vm.scale)+"%");
-      } else if (vm.showLegend && !vm.showPercent) {
-        $(self).find('span.legend-text').html((value*vm.scale).toFixed(vm.precision));
+      if (vm.showPercent){
+        $(self).find('span.percent-text').html(Math.floor(value*100)+"%");
       }
     }
   },
   methods:{
     convertedProgress(progress) {
-      return progress/this.scale;
+      return progress/100;
     },
     updateProgress(value){
       if ($.type(value) === "number") {
@@ -138,7 +128,9 @@ export default {
     },
   },
   beforeDestroy: function(){
-    $(this.$el).remove();
+    if (this.removeOnDestroy){
+      $(this.$el).remove();
+    }
   }
 }
 </script>
@@ -148,7 +140,7 @@ export default {
   position: relative;
   display: inline-block;
 }
-.circle-text-body {
+.circle-percent-text-body {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -156,5 +148,8 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.percent-text {
+  font-weight: bold;
 }
 </style>
